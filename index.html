@@ -20,14 +20,125 @@
                     <input type="text" name="file" id="midi-track">
             </div>
             <div class="field">
-                <button>转换</button>
+                <button id="btn-convert">转换</button>
             </div>
         </form>
         <div>
-            <textarea name="script" id="" cols="100" rows="100">
-
+            <textarea name="script" id="script" cols="100" rows="100">
             </textarea>
         </div>
     </div>
+
+    <script>
+        function toScript(notes){
+                if(notes == null){
+                    return "";
+                }
+                var  scripts = [
+                    '<?xml version="1.0" encoding="UTF-8"?>',
+                    '<Profile>',
+                    '<Name>Sion MiDi Convert</Name>',
+                    '<KillRadius>1</KillRadius>',
+                    '<Order>',
+                    '<Performance>',
+                    '<PerformNotes>'
+                ];
+                notes.forEach(function(note, index){
+                let name = note.name;
+                let delay = Math.ceil(note.duration * 1000);
+                let scriptName = "";
+                let baseNoteName = name.charAt(0);
+                let level = 0;
+
+
+                if(name.indexOf("#") > 0){
+                    level = parseInt(name.charAt(2), 10);
+                    if(["C", "F", "G"].indexOf(baseNoteName) > -1){
+                        baseNoteName += "#";
+                        level = parseInt(name.charAt(2), 10);
+                    }else{
+                        // 无法弹奏的换成原音算了
+                        level = 5;
+                    }
+                }else if(name.indexOf("b") > 0){
+                    level = parseInt(name.charAt(2), 10);
+                    if(["E", "B"].indexOf(baseNoteName) > -1){
+                        baseNoteName += "b";
+                        level = parseInt(name.charAt(2), 10);
+                    }else{
+                        // 无法弹奏的换成原音算了
+                        level = 3;
+                    }
+                }else{
+                    level = parseInt(name.charAt(1), 10);
+                }
+
+                scriptName = baseNoteName;
+                
+                switch(level){
+                    case 3:
+                        scriptName += "-1";
+                    break;
+                    case 4:
+                    // 4就是自己
+                    break;
+                    case 5:
+                        scriptName += "+1";
+                    break;
+                    case 6:
+                        scriptName = baseNoteName == "C" ? "C+2" : "";
+                    break;
+                    default:
+                        // 无法演奏
+                        if(level < 3){
+                            scriptName += "-1";
+                        }
+                        if(level >= 6){
+                            scriptName += "+1";
+                        }
+                }
+
+                if(scriptName == ""){
+                    return;
+                }
+                script = '<PerformNote Delay="' + delay +'" Note="'+ scriptName +'" />';
+                scripts.push(script);
+            });
+
+            scripts.push("</PerformNotes>");
+            scripts.push("</Performance>");
+            scripts.push("</Order>");
+            scripts.push("</Profile>");
+            performNotes = scripts.join("\r\n");
+            return performNotes;
+        }
+
+        var midiContent = null;
+		function parseFile(file){
+			var reader = new FileReader();
+			reader.onload = function(e){
+                midiContent = MidiConvert.parse(e.target.result);
+			};
+			reader.readAsBinaryString(file);
+        }
+        
+        $("#midi-file").change(function(){
+            parseFile(this);
+        })
+
+        $("#btn-convert").click(function(){
+            if(!midiContent){
+                alert("加载midi失败");
+                return false;
+            }
+            let selectTrack = parseInt($("#midi-track").val(), 10);
+            if(selectTrack < 0 || selectTrack > midiContent.tracks.length){
+                alert("音轨编号错误");
+                return;
+            }
+            let script = toScript(partsData.tracks[selectTrack].notes);
+            $("#script").val(script);
+        });
+    </script>
 </body>
 </html>
