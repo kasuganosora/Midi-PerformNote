@@ -140,7 +140,7 @@
                 alert("音轨编号错误");
                 return false;
             }
-            let script = toScript(partsData.tracks[selectTrack].notes);
+            let script = toScript(midiContent.tracks[selectTrack].notes);
             $("#script").val(script);
             return false;
         });
