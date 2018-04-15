@@ -122,8 +122,12 @@
 			reader.readAsBinaryString(file);
         }
         
-        $("#midi-file").change(function(){
-            parseFile(this);
+        $("#midi-file").change(function(e){
+            let files = e.target.files;
+            if (files.length > 0){
+                let file = files[0];
+                parseFile(file);
+            }
         })
 
         $("#btn-convert").click(function(){
