@@ -17,7 +17,8 @@
             </div>
             <div class="field">
                     <label for="file">音轨</label><br>
-                    <input type="text" name="file" id="midi-track" value="1">
+		    <select id="midi-track">
+		    </select>
             </div>
             <div class="field">
                 <button id="btn-convert">转换</button>
@@ -117,7 +118,15 @@
 		function parseFile(file){
 			var reader = new FileReader();
 			reader.onload = function(e){
-                midiContent = MidiConvert.parse(e.target.result);
+                		midiContent = MidiConvert.parse(e.target.result);
+				let sel = $("#midi-track");
+				sel.find("option").remove();
+				for(let i = 0; i<midiContent.tracks.length; i++){
+					if(midiContent.tracks[i].notes.length == 0){
+						continue;
+					}
+					sel.append('<option value="' + i + '">音轨: ' + i ' 长度:'+ midiContent.tracks[i].notes.length +'</option>')
+				}
 			};
 			reader.readAsBinaryString(file);
         }
