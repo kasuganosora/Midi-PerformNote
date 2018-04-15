@@ -31,6 +31,72 @@
     </div>
 
     <script>
+        function procNote(note){
+            let name = note.name;
+            let delay = Math.ceil(note.duration * 1000);
+            let scriptName = "";
+            let baseNoteName = name.charAt(0);
+            let level = 0;
+
+
+            if(name.indexOf("#") > 0){
+                level = parseInt(name.charAt(2), 10);
+                if(["C", "F", "G"].indexOf(baseNoteName) > -1){
+                    baseNoteName += "#";
+                    level = parseInt(name.charAt(2), 10);
+                }else{
+                    // 无法弹奏的换成原音算了
+                    level = 5;
+                }
+            }else if(name.indexOf("b") > 0){
+                level = parseInt(name.charAt(2), 10);
+                if(["E", "B"].indexOf(baseNoteName) > -1){
+                    baseNoteName += "b";
+                    level = parseInt(name.charAt(2), 10);
+                }else{
+                    // 无法弹奏的换成原音算了
+                    level = 3;
+                }
+            }else{
+                level = parseInt(name.charAt(1), 10);
+            }
+
+            scriptName = baseNoteName;
+            
+            switch(level){
+                case 3:
+                    scriptName += "-1";
+                break;
+                case 4:
+                // 4就是自己
+                break;
+                case 5:
+                    scriptName += "+1";
+                break;
+                case 6:
+                    scriptName = baseNoteName == "C" ? "C+2" : "";
+                break;
+                default:
+                    // 无法演奏
+                    if(level < 3){
+                        scriptName += "-1";
+                    }
+                    if(level >= 6){
+                        scriptName += "+1";
+                    }
+            }
+
+            if(scriptName == ""){
+                return null;
+            }
+            return {
+                note: scriptName,
+                delay: delay
+            };
+        }
+
+        
+
         function toScript(notes){
                 if(notes == null){
                     return "";
@@ -44,67 +110,54 @@
                     '<Performance>',
                     '<PerformNotes>'
                 ];
+
+				// 按照时间聚合, 方便处理和弦
+                let _notes = {};
                 notes.forEach(function(note, index){
-                let name = note.name;
-                let delay = Math.ceil(note.duration * 1000);
-                let scriptName = "";
-                let baseNoteName = name.charAt(0);
-                let level = 0;
-
-
-                if(name.indexOf("#") > 0){
-                    level = parseInt(name.charAt(2), 10);
-                    if(["C", "F", "G"].indexOf(baseNoteName) > -1){
-                        baseNoteName += "#";
-                        level = parseInt(name.charAt(2), 10);
-                    }else{
-                        // 无法弹奏的换成原音算了
-                        level = 5;
+                    time = note.time.toFixed(7);
+                    if(!_notes.hasOwnProperty(time)){
+                        _notes[time] = [];
                     }
-                }else if(name.indexOf("b") > 0){
-                    level = parseInt(name.charAt(2), 10);
-                    if(["E", "B"].indexOf(baseNoteName) > -1){
-                        baseNoteName += "♭";
-                        level = parseInt(name.charAt(2), 10);
-                    }else{
-                        // 无法弹奏的换成原音算了
-                        level = 3;
+                    _notes[time].push(note);
+
+                });
+
+                notes = _notes;
+                notes.forEach(function(noteList, index){
+                    let note;
+                    // 不是和旋的情况
+                    if(noteList.length == 1){
+                        note = noteList[0];
                     }
-                }else{
-                    level = parseInt(name.charAt(1), 10);
-                }
+                    // 和旋的情况
+                    if(noteList.length > 1){
+                        noteList = noteList.sort(function(a, b){
+                            if(a.time == b.time){
+                                let sortIndex = ["C4", "G4", "D4", "A4", "E4", "B4", "Gb", "Fb", "Db", "Ab", "Eb", "Bb", "F4",
+                                "A3", "E3", "B3", "F#3", "C#3", "G#3", "Eb3", "Db3", "Bb3", "F3", "C3", "G3", "D3"];
+                                let aIndex = sortIndex.indexOf(a.name);
+                                let bIndex = sortIndex.indexOf(b.name);
+                                if(aIndex == bIndex){
+                                    return 0;
+                                }
+                                return aIndex < bIndex ? -1 : 1;
+                            }; 
+                            return a.time < b.time ? -1: 1;
+                        });
+                        note = noteList[0];
+                    }
 
-                scriptName = baseNoteName;
-                
-                switch(level){
-                    case 3:
-                        scriptName += "-1";
-                    break;
-                    case 4:
-                    // 4就是自己
-                    break;
-                    case 5:
-                        scriptName += "+1";
-                    break;
-                    case 6:
-                        scriptName = baseNoteName == "C" ? "C+2" : "";
-                    break;
-                    default:
-                        // 无法演奏
-                        if(level < 3){
-                            scriptName += "-1";
-                        }
-                        if(level >= 6){
-                            scriptName += "+1";
-                        }
-                }
+                    if(noteList.length == 0){
+                        return;
+                    }
 
-                if(scriptName == ""){
-                    return;
-                }
-                script = '<PerformNote Delay="' + delay +'" Note="'+ scriptName +'" />';
-                scripts.push(script);
-            });
+                    note = procNote(note);
+                    if(!note){
+                        return;
+                    }
+                    script = '<PerformNote Delay="' + note.delay +'" Note="'+ note.note +'" />';
+                    scripts.push(script);
+                });
 
             scripts.push("</PerformNotes>");
             scripts.push("</Performance>");
