@@ -138,10 +138,11 @@
             let selectTrack = parseInt($("#midi-track").val(), 10);
             if(selectTrack < 0 || selectTrack > midiContent.tracks.length){
                 alert("音轨编号错误");
-                return;
+                return false;
             }
             let script = toScript(partsData.tracks[selectTrack].notes);
             $("#script").val(script);
+            return false;
         });
     </script>
 </body>
