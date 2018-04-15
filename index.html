@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Midi-PerformNote</title>
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+    <script src="./MidiConvert.js"></script>
+</head>
+<body>
+    <div class="page">
+        <form>
+            <div class="field">
+                    <label for="file">MIDI文件</label><br>
+                    <input type="file" name="file" id="midi-file">
+            </div>
+            <div class="field">
+                    <label for="file">音轨</label><br>
+                    <input type="text" name="file" id="midi-track">
+            </div>
+            <div class="field">
+                <button>转换</button>
+            </div>
+        </form>
+        <div>
+            <textarea name="script" id="" cols="100" rows="100">
+
+            </textarea>
+        </div>
+    </div>
+</body>
+</html>
